@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const fs = require('fs-extra');
@@ -6,27 +6,35 @@ const path = require('path');
 
 const app = express();
 app.use(cors());
-app.use(bodyParser.json({ limit: '50mb' })); // Для загрузки фото
-app.use(express.static('public'));
+app.use(bodyParser.json({ limit: '50mb' }));
 
 // --- НАСТРОЙКИ ---
-const ADMIN_PASSWORD = "17092005"; // ИЗМЕНИ ПАРОЛЬ ТУТ
+const ADMIN_PASSWORD = "1234"; // Твой пароль
 // -----------------
 
-const DB_PRODUCTS = './products.json';
-const DB_ORDERS = './orders.json';
+const DB_PRODUCTS = path.join(__dirname, 'products.json');
+const DB_ORDERS = path.join(__dirname, 'orders.json');
 
-// Инициализация БД
+// Инициализация БД (файлы создадутся сами на сервере)
 if (!fs.existsSync(DB_PRODUCTS)) fs.writeJsonSync(DB_PRODUCTS, []);
 if (!fs.existsSync(DB_ORDERS)) fs.writeJsonSync(DB_ORDERS, []);
 
-// Получить товары
-app.get('/api/products', async (req, res) => {
-    const products = await fs.readJson(DB_PRODUCTS);
-    res.json(products);
+// ГЛАВНАЯ СТРАНИЦА: Отдаем index.html из корня проекта
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Добавить товар (нужен пароль)
+// Получить все товары
+app.get('/api/products', async (req, res) => {
+    try {
+        const products = await fs.readJson(DB_PRODUCTS);
+        res.json(products);
+    } catch (err) {
+        res.json([]);
+    }
+});
+
+// Добавить товар
 app.post('/api/products', async (req, res) => {
     const { password, product } = req.body;
     if (password !== ADMIN_PASSWORD) return res.status(403).send('Wrong password');
@@ -57,7 +65,7 @@ app.post('/api/orders', async (req, res) => {
     res.json({ success: true });
 });
 
-// Получить заказы (для админки)
+// Получить заказы
 app.post('/api/get-orders', async (req, res) => {
     if (req.body.password !== ADMIN_PASSWORD) return res.status(403).send('Wrong password');
     const orders = await fs.readJson(DB_ORDERS);
@@ -65,4 +73,4 @@ app.post('/api/get-orders', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
