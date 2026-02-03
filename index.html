@@ -1,0 +1,223 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhooshI — Магазин наушников</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Sharp">
+    <style>
+        :root {
+            --md-sys-color-primary: #fdb913;
+            --md-sys-color-secondary: #ff8200;
+            --md-sys-color-surface: #f6f6f6;
+        }
+        body { font-family: 'Roboto', sans-serif; background: var(--md-sys-color-surface); }
+        .m3-card { background: #fff; border-radius: 24px; transition: all 0.3s ease; }
+        .m3-button { border-radius: 20px; font-weight: 500; }
+        .whoosh-gradient { background: linear-gradient(135deg, #fdb913 0%, #ff8200 100%); }
+        .m3-input { border: 1px solid #79747e; border-radius: 8px; padding: 12px; width: 100%; }
+        #admin-panel { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body>
+
+    <script>
+        // ССЫЛКА НА ТВОЙ ТЕЛЕГРАМ
+        const TELEGRAM_LINK = "https://t.me/your_channel"; 
+        let currentAdminPassword = "";
+    </script>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b px-4 py-3">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-10 h-10 whoosh-gradient rounded-full flex items-center justify-center shadow-lg"><span class="text-white font-black text-xl">W</span></div>
+                <h1 class="text-2xl font-bold tracking-tighter">Whoosh<span class="text-[#ff8200]">I</span></h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="document.getElementById('login-modal').classList.remove('hidden')" class="text-gray-400 hover:text-gray-600"><span class="material-icons-sharp text-sm">lock</span></button>
+                <a id="tg-link" href="#" target="_blank" class="whoosh-gradient text-white p-2 rounded-full shadow-md"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg></a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-12">
+        <h2 class="text-4xl font-black text-center mb-12">Наушники WhooshI</h2>
+        <div id="product-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+    </main>
+
+    <!-- Вход -->
+    <div id="login-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[1100]">
+        <div class="bg-white p-8 rounded-[28px] max-w-sm w-full">
+            <h3 class="text-2xl font-bold mb-4">Админ-панель</h3>
+            <input type="password" id="pass-input" placeholder="Пароль" class="m3-input mb-4">
+            <button onclick="login()" class="w-full py-3 whoosh-gradient text-white m3-button">Войти</button>
+            <button onclick="document.getElementById('login-modal').classList.add('hidden')" class="w-full mt-2 text-gray-500">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Админка -->
+    <div id="admin-panel" class="overflow-y-auto">
+        <div class="max-w-4xl mx-auto my-10 bg-white p-8 rounded-[32px]">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold">Управление</h2>
+                <button onclick="location.reload()" class="material-icons-sharp">close</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Форма товара -->
+                <div class="space-y-4 p-6 bg-gray-50 rounded-2xl">
+                    <h4 class="font-bold uppercase text-xs text-gray-400">Добавить товар</h4>
+                    <input type="text" id="p-name" placeholder="Название" class="m3-input bg-white">
+                    <textarea id="p-desc" placeholder="Описание" class="m3-input bg-white"></textarea>
+                    <input type="number" id="p-price" placeholder="Цена" class="m3-input bg-white">
+                    <input type="file" id="p-img" class="text-sm">
+                    <button onclick="addProduct()" class="w-full py-3 whoosh-gradient text-white m3-button">Сохранить</button>
+                </div>
+                <!-- Список заявок -->
+                <div class="space-y-4">
+                    <h4 class="font-bold uppercase text-xs text-gray-400">Последние заявки</h4>
+                    <div id="orders-list" class="space-y-2 h-[400px] overflow-y-auto"></div>
+                </div>
+            </div>
+            
+            <h4 class="font-bold mt-10 mb-4 uppercase text-xs text-gray-400">Текущие товары</h4>
+            <div id="admin-products" class="grid grid-cols-1 gap-2"></div>
+        </div>
+    </div>
+
+    <!-- Модалка покупки -->
+    <div id="buy-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-[1050]">
+        <div class="bg-white p-8 rounded-[28px] max-w-md w-full mx-4">
+            <h3 id="buy-title" class="text-2xl font-bold mb-6">Оформить заказ</h3>
+            <form onsubmit="sendOrder(event)" class="space-y-4">
+                <input type="text" id="c-name" placeholder="Имя" required class="m3-input">
+                <input type="tel" id="c-phone" placeholder="Телефон" required class="m3-input">
+                <input type="email" id="c-email" placeholder="Email" required class="m3-input">
+                <button type="submit" class="w-full py-4 whoosh-gradient text-white m3-button text-lg">Заказать</button>
+                <button type="button" onclick="document.getElementById('buy-modal').classList.add('hidden')" class="w-full text-gray-500">Отмена</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('tg-link').href = TELEGRAM_LINK;
+        const API = ""; // Оставляем пустым если фронт и бэк на одном хосте
+
+        async function loadProducts() {
+            const res = await fetch('/api/products');
+            const products = await res.json();
+            const grid = document.getElementById('product-grid');
+            const admGrid = document.getElementById('admin-products');
+            grid.innerHTML = ''; admGrid.innerHTML = '';
+
+            products.forEach(p => {
+                grid.innerHTML += `
+                    <div class="m3-card overflow-hidden border">
+                        <img src="${p.img}" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold">${p.name}</h3>
+                            <p class="text-gray-500 text-sm mb-4">${p.desc}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-2xl font-black">${p.price} ₽</span>
+                                <button onclick="openBuy('${p.name}')" class="m3-button whoosh-gradient text-white px-6 py-2">Купить</button>
+                            </div>
+                        </div>
+                    </div>`;
+                admGrid.innerHTML += `
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                        <span>${p.name}</span>
+                        <button onclick="deleteProduct(${p.id})" class="text-red-500 material-icons-sharp">delete</button>
+                    </div>`;
+            });
+        }
+
+        async function login() {
+            const pass = document.getElementById('pass-input').value;
+            const res = await fetch('/api/get-orders', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({password: pass})
+            });
+            if(res.ok) {
+                currentAdminPassword = pass;
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('admin-panel').style.display = 'block';
+                loadOrders();
+            } else { alert('Неверно'); }
+        }
+
+        async function loadOrders() {
+            const res = await fetch('/api/get-orders', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({password: currentAdminPassword})
+            });
+            const orders = await res.json();
+            const list = document.getElementById('orders-list');
+            list.innerHTML = orders.reverse().map(o => `
+                <div class="p-4 border rounded-xl text-sm shadow-sm bg-white">
+                    <div class="font-bold text-[#ff8200]">${o.product}</div>
+                    <div>${o.name} | ${o.phone}</div>
+                    <div class="text-gray-400 text-xs">${o.date}</div>
+                </div>
+            `).join('');
+        }
+
+        async function addProduct() {
+            const file = document.getElementById('p-img').files[0];
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const product = {
+                    name: document.getElementById('p-name').value,
+                    desc: document.getElementById('p-desc').value,
+                    price: document.getElementById('p-price').value,
+                    img: reader.result
+                };
+                await fetch('/api/products', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({password: currentAdminPassword, product})
+                });
+                loadProducts();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function deleteProduct(id) {
+            await fetch(`/api/products/${id}`, {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({password: currentAdminPassword})
+            });
+            loadProducts();
+        }
+
+        function openBuy(name) {
+            document.getElementById('buy-title').innerText = name;
+            document.getElementById('buy-modal').classList.remove('hidden');
+        }
+
+        async function sendOrder(e) {
+            e.preventDefault();
+            const order = {
+                product: document.getElementById('buy-title').innerText,
+                name: document.getElementById('c-name').value,
+                phone: document.getElementById('c-phone').value,
+                email: document.getElementById('c-email').value
+            };
+            await fetch('/api/orders', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(order)
+            });
+            alert('Заявка отправлена!');
+            document.getElementById('buy-modal').classList.add('hidden');
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>
